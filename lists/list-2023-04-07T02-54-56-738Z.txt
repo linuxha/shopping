@@ -1,0 +1,11 @@
+* Thu Apr 06 2023 Groceries List
+
+- [ ] Pistachios
+- [ ] Potatoes
+- [ ] Colgate Total toothpaste
+- [ ] toothbrush
+- [ ] Cherrios
+- [ ] Raisin Bran
+- [ ] S'gettis
+- [ ] S'gettis Sauce
+- [ ] Dairy

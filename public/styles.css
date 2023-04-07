@@ -1,0 +1,30 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #E8ADAA; /* Rose */
+}
+
+.aisle {
+    margin-top: 1px;
+    margin-bottom: 5px;
+}
+
+h1 {
+    margin-top: 1px;
+    margin-bottom: 20px;
+}
+
+div#color0 {
+    background: #F4FF81;
+    /*color: white; /* */
+}
+/* */
+/* div#color:nth-child(odd) { */
+div#color1 {
+    /* background: white; /* */
+    background: lightgreen;
+    color: black;
+}
+
+div#brim {
+    broder: ridge;
+}

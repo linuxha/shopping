@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grocery List</title>
+</head>
+<body>
+  <h1>Grocery List</h1>
+  <!-- h2><%= new Date().toLocaleDateString() %> Groceries list</h2 -->
+  <h2><%= new Date().toDateString() %> Groceries list</h2>
+  <ul>
+    <% sortedItems.forEach((item) => { %>
+      <li>- [ ] <%= item %></li>
+    <% }); %>
+  </ul>
+
+  <!-- Update the form in your list.ejs file -->
+  <form id="add-item-form" action="/add-item" method="post">
+    <label for="new-item">Item Name:</label>
+    <input type="text" name="new-item" id="new-item" required>
+  
+    <label for="aisle">Aisle:</label>
+    <input type="text" name="aisle" id="aisle" required>
+  
+    <button type="submit">Add</button>
+  </form>
+
+  <a href="/">Back to selection</a>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grocery List Generator</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body>
+  <h1>Grocery List Generator</h1>
+  <!-- form id="grocery-form" -->
+  <form id="grocery-form" action="/generate-list" method="post" enctype="application/x-www-form-urlencoded">
+    <% const groupedInventory = {}; %>
+    <% inventory.forEach((item) => { %>
+      <% if (!groupedInventory[item.aisle]) { %>
+        <% groupedInventory[item.aisle] = []; %>
+      <% } %>
+      <% groupedInventory[item.aisle].push(item); %>
+    <% }); %>
+
+    <div class="brim">
+    <% Object.keys(groupedInventory).forEach((aisle) => { %>
+      <div id="color<%= aisle%2 %>">
+        <button type="button" class="toggle-aisle" data-aisle="<%= aisle %>">
+          Hide Aisle <%= aisle %>
+        </button>
+        <!-- button type="button" class="toggle-aisle" data-aisle="<%= aisle %>">
+             Toggle Aisle <%= aisle %>
+             </button -->
+        <div class="aisle-items" data-aisle="<%= aisle %>">
+          <% groupedInventory[aisle].forEach((item) => { %>
+          <div class="item">
+            <label>
+              <input type="checkbox" name="items" value="<%= item.item %>">
+              <%= item.item %>
+            </label>
+          </div>
+          <% }); %>
+        </div>
+      </div>
+    <% }); %>
+    </div> <!-- brim -->
+    <button type="submit">Generate List</button>
+  </form>
+
+  <!-- Update the form in your list.ejs file -->
+  <form id="add-item-form" action="/add-item" method="post">
+    <label for="new-item">Item Name:</label>
+    <input type="text" name="new-item" id="new-item" required>
+  
+    <label for="aisle">Aisle:</label>
+    <input type="text" name="aisle" id="aisle" required>
+  
+    <button type="submit">Add</button>
+  </form>
+
+  <div id="grocery-list"></div>
+</body>
+</html>
