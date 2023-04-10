@@ -52,7 +52,7 @@ describe('Grocery List Application', () => {
     });
 
     // Check for non-existant item
-    test('should return 404 on DELETE /item/:NonExistentItem - failure (item not found)', async () => {
+    it('should return 404 on DELETE /item/:NonExistentItem - failure (item not found)', async () => {
         const nonExistentItem = 'NonExistentItem';
         const response = await request(app).delete(`/item/${nonExistentItem}`);
 
