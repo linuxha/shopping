@@ -60,6 +60,16 @@ app.use('/styles.css', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'styles.css'));
 });
 
+app.use('/bootstrap.min.css', (req, res) => {
+    res.setHeader('Content-Type', 'text/css');
+    res.sendFile(path.join(__dirname, 'public', 'bootstrap.min.css'));
+});
+
+app.use('/bootstrap.min.css.map', (req, res) => {
+    res.setHeader('Content-Type', 'text/css');
+    res.sendFile(path.join(__dirname, 'public', 'bootstrap.min.css.map'));
+});
+
 app.use('/favicon.ico', (req, res) => {
     res.setHeader('Content-Type', 'image/x-icon');
     res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
@@ -71,6 +81,7 @@ app.get('/', (req, res) => {
     res.render('index', { inventory });
 });
 
+/*
 app.post('/generate-list', (req, res) => {
     const selectedItems = req.body.items;
     console.log(JSON.stringify(selectedItems));
@@ -78,6 +89,34 @@ app.post('/generate-list', (req, res) => {
     const itemsWithAisles = selectedItems.map((item) => {
         const inventoryItem = inventory.find((i) => i.item === item);
         return { item, aisle: inventoryItem.aisle };
+    });
+
+    itemsWithAisles.sort((a, b) => parseInt(a.aisle) - parseInt(b.aisle));
+    const sortedItems = itemsWithAisles.map((item) => item.item);
+
+    // Save the sorted list to a file
+    saveListToFile(sortedItems);
+
+    res.render('list', { sortedItems });
+});
+*/
+
+app.post('/generate-list', (req, res) => {
+    let selectedItems = req.body.items;
+
+    if (!Array.isArray(selectedItems)) {
+        selectedItems = [selectedItems];
+    }
+
+    console.log(JSON.stringify(selectedItems));
+
+    const itemsWithAisles = selectedItems.map((item) => {
+        const inventoryItem = inventory.find((i) => i.item === item);
+        try {
+            return { item, aisle: inventoryItem.aisle };
+        } catch(e) {
+            return { item, aisle: null }; // seems okay
+        }
     });
 
     itemsWithAisles.sort((a, b) => parseInt(a.aisle) - parseInt(b.aisle));
