@@ -1,61 +1,117 @@
 <!DOCTYPE html>
-<html lang="en">
+<html  lang="en" xml:lang="en" xmlns= "http://www.w3.org/1999/xhtml">
+  <meta charset="UTF-8">
+  <meta name="google" content="notranslate">
+  <meta http-equiv="Content-Language" content="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grocery List Generator</title>
+  <title>Inventory</title>
+  <!-- link href="bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+Knujsl7/1L_dstPt3HV5HzF6Gvk/e3m5f/1Ro9ddfFOn1A" crossorigin="anonymous" -->
+  <link href="/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
-  <script src="/script.js" defer></script>
 </head>
 <body>
-  <h1>Grocery List Generator</h1>
-  <!-- form id="grocery-form" -->
-  <form id="grocery-form" action="/generate-list" method="post" enctype="application/x-www-form-urlencoded">
-    <% const groupedInventory = {}; %>
-    <% inventory.forEach((item) => { %>
-      <% if (!groupedInventory[item.aisle]) { %>
-        <% groupedInventory[item.aisle] = []; %>
-      <% } %>
-      <% groupedInventory[item.aisle].push(item); %>
-    <% }); %>
+  <div class="container">
+    <h1 class="my-3">Inventory</h1>
 
-    <div class="brim">
-    <% Object.keys(groupedInventory).forEach((aisle) => { %>
-      <div id="color<%= aisle%2 %>">
-        <button type="button" class="toggle-aisle" data-aisle="<%= aisle %>">
-          Hide Aisle <%= aisle %>
-        </button>
-        <!-- button type="button" class="toggle-aisle" data-aisle="<%= aisle %>">
-             Toggle Aisle <%= aisle %>
-             </button -->
-        <div class="aisle-items" data-aisle="<%= aisle %>">
-          <% groupedInventory[aisle].forEach((item) => { %>
-          <div class="item">
-            <label>
-              <input type="checkbox" name="items" value="<%= item.item %>">
-              <%= item.item %>
-            </label>
-          </div>
+    <form id="generate-list-form" action="/generate-list" method="post">
+      <table class="table table-striped table-hover">
+        <thead>
+          <tr>
+            <th scope="col">Select</th>
+            <th scope="col">Item</th>
+            <th scope="col">Aisle</th>
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% inventory.forEach((item) => { %>
+            <tr class="aisle-<%= item.aisle %>">
+              <td><input type="checkbox" name="items" value="<%= item.item %>"></td>
+              <td><%= item.item %></td>
+              <td><%= item.aisle %></td>
+              <td>
+                <button class="btn btn-danger delete-item-btn" data-item="<%= item.item %>">Delete</button>
+              </td>
+            </tr>
           <% }); %>
-        </div>
+        </tbody>
+      </table>
+
+      <button type="submit" class="btn btn-primary mb-3">Generate List</button>
+    </form>
+
+    <form id="add-item-form" action="/add-item" method="post" class="row g-3">
+      <div class="col-md-4">
+        <label for="new-item" class="form-label">Item Name:</label>
+        <input type="text" name="new-item" id="new-item" class="form-control" required>
       </div>
-    <% }); %>
-    </div> <!-- brim -->
-    <button type="submit">Generate List</button>
-  </form>
 
-  <!-- Update the form in your list.ejs file -->
-  <form id="add-item-form" action="/add-item" method="post">
-    <label for="new-item">Item Name:</label>
-    <input type="text" name="new-item" id="new-item" required>
-  
-    <label for="aisle">Aisle:</label>
-    <input type="text" name="aisle" id="aisle" required>
-  
-    <button type="submit">Add</button>
-  </form>
+      <div class="col-md-4">
+        <label for="aisle" class="form-label">Aisle:</label>
+        <input type="text" name="aisle" id="aisle" class="form-control" required>
+      </div>
 
-  <div id="grocery-list"></div>
+      <div class="col-md-4 d-flex align-items-end">
+        <button type="submit" class="btn btn-success">Add</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    document.querySelectorAll('.delete-item-btn').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        const itemName = e.target.getAttribute('data-item');
+        try {
+          const response = await fetch(`/item/${encodeURIComponent(itemName)}`, {
+            method: 'DELETE',
+          });
+
+          if (response.status === 200) {
+            // Reload the page to show the updated list
+            window.location.reload();
+          } else {
+            alert(`Error deleting item: ${response.statusText}`);
+          }
+        } catch (error) {
+          alert(`Error deleting item: ${error.message}`);
+        }
+      });
+    });
+
+    // ------------------------------------------------------------------------------------
+
+    const aisles = document.querySelectorAll('tr[class^="aisle"]');
+    const evenAisleColor = '#FFC87A'; /* '#FD7E14'; */
+    const oddAisleColor  = '#EEE8AA'; /* '#FFC107'; */
+
+    aisles.forEach((row) => {
+      const aisle = parseInt(row.className.match(/aisle-(\d+)/)[1]);
+      if (aisle % 2 === 0) {
+        row.style.backgroundColor = evenAisleColor;
+      } else {
+        row.style.backgroundColor = oddAisleColor;
+      }
+    });
+
+    function foo(evenAisleColor, oddAisleColor) {
+        const aisles = document.querySelectorAll('tr[class^="aisle"]');
+
+        aisles.forEach((row) => {
+            const aisle = parseInt(row.className.match(/aisle-(\d+)/)[1]);
+
+            if (aisle % 2 === 0) {
+                row.style.backgroundColor = evenAisleColor;
+            } else {
+                row.style.backgroundColor = oddAisleColor;
+            }
+        });
+    }
+  </script>
+
+  <div><br/></div> <!-- Force  blank line< -->
+
 </body>
 </html>
