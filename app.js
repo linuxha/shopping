@@ -10,39 +10,45 @@
 // boxes. On my phone I have a simple org-mode app that allows me to sync via
 // webdav files. If I mv the list to the appropriate webdav server using cav.sh
 // I can then sync with my phone the generated list
+//
+// https://stackoverflow.com/questions/63325281/how-to-automatically-reload-updated-ssl-certificates-in-node-js-application
 
 const myHTTP  = process.argv[2] ? parseInt(process.argv[2]) : 13000;
-//const myHTTP  = 13000;
-//const myHTTPS = process.argv[3] ? parseInt(process.argv[3]) : 13443;
-//const myHTTPS = 13443;
 const myHTTPS = myHTTP + 443;
 
 const express    = require('express');
 const bodyParser = require('body-parser');
 const fs         = require('fs');
-const app        = express();
 const path       = require('path');
 const https      = require('https');
 const { exec }   = require('child_process');
+
+const app        = express();
 
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// path to linked SSL cert files
 const privateKeyPath  = path.join(__dirname, './ssl/key.pem');
 const certificatePath = path.join(__dirname, './ssl/cert.pem');
 
+// If the files exist we hasSSLCredentials
 const hasSSLCredentials = fs.existsSync(privateKeyPath) && fs.existsSync(certificatePath);
 
 let httpsServer;
 
+// if we hasSSLCredentials then go and get them
+// make sure we watch them for updates too
+// And we should listen on ${myHTTPS} port
 if (hasSSLCredentials) {
-    const privateKey  = fs.readFileSync(privateKeyPath, 'utf8');
+    const privateKey  = fs.readFileSync(privateKeyPath,  'utf8');
     const certificate = fs.readFileSync(certificatePath, 'utf8');
     const ca          = fs.readFileSync(certificatePath, 'utf8');
 
-    const credentials = {
+    //const 
+    credentials = {
         key:  privateKey,
         cert: certificate,
         ca:   ca,
@@ -53,7 +59,15 @@ if (hasSSLCredentials) {
     httpsServer.listen(myHTTPS, () => {
         console.log(`HTTPS server running on port ${myHTTPS}`);
     });
+
+    watchCertFile('./ssl/key.pem');     // These watch the file for changes and then points to the new file
+    watchCertFile('./ssl/cert.pem');    // 
 }
+
+// Listen on the non-HTTPS too
+const httpServer = app.listen(myHTTP, () => {
+    console.log(`Server started on port ${myHTTP}`);
+});
 
 app.use('/styles.css', (req, res) => {
     res.setHeader('Content-Type', 'text/css');
@@ -81,25 +95,6 @@ app.get('/', (req, res) => {
     res.render('index', { inventory });
 });
 
-/*
-app.post('/generate-list', (req, res) => {
-    const selectedItems = req.body.items;
-    console.log(JSON.stringify(selectedItems));
-
-    const itemsWithAisles = selectedItems.map((item) => {
-        const inventoryItem = inventory.find((i) => i.item === item);
-        return { item, aisle: inventoryItem.aisle };
-    });
-
-    itemsWithAisles.sort((a, b) => parseInt(a.aisle) - parseInt(b.aisle));
-    const sortedItems = itemsWithAisles.map((item) => item.item);
-
-    // Save the sorted list to a file
-    saveListToFile(sortedItems);
-
-    res.render('list', { sortedItems });
-});
-*/
 
 app.post('/generate-list', (req, res) => {
     let selectedItems = req.body.items;
@@ -108,7 +103,7 @@ app.post('/generate-list', (req, res) => {
         selectedItems = [selectedItems];
     }
 
-    console.log(JSON.stringify(selectedItems));
+    // console.log(JSON.stringify(selectedItems));
 
     const itemsWithAisles = selectedItems.map((item) => {
         const inventoryItem = inventory.find((i) => i.item === item);
@@ -130,24 +125,26 @@ app.post('/generate-list', (req, res) => {
 
 app.post('/add-item', (req, res) => {
     const newItem = req.body['new-item'];
-    const aisle = req.body['aisle'];
+    const aisle   = req.body['aisle'];
+
     inventory.push({ item: newItem, aisle: aisle });
 
+    // Sort the inventory by aisle
+    inventory.sort((a, b) => parseInt(a.aisle) - parseInt(b.aisle));
+
+    // Backup the current inventory
     backupInventory();
 
-    fs.writeFile(path.join(__dirname, './inventory.json'), JSON.stringify(inventory, null, 2), (err) => {
+    // Update the inventory.json file
+    fs.writeFile('./inventory.json', JSON.stringify(inventory, null, 2), (err) => {
         if (err) {
             console.error('Error updating inventory:', err);
             res.status(500).send('Error updating inventory.');
         } else {
             console.log('Inventory updated.');
-            res.redirect('/');
+            res.redirect('/'); // Redirect back to the item selection page
         }
     });
-});
-
-const httpServer = app.listen(myHTTP, () => {
-    console.log(`Server started on port ${myHTTP}`);
 });
 
 function backupInventory() {
@@ -178,7 +175,6 @@ function saveListToFile(sortedItems) {
             console.log('List saved to file:', fileName);
 
             // Execute the external script with the new file as an argument
-            //exec(`./cav.sh ${fileName}`, (err, stdout, stderr) => {
             exec(`cav.sh ${fileName}> /tmp/cav.sh.log 2>&1`, (err, stdout, stderr) => {
                 if (err) {
                     console.error('Error executing cav.sh:', err);
@@ -216,5 +212,83 @@ app.delete('/item/:itemName', (req, res) => {
         }
     });
 });
+
+//
+function updateCerts() {
+    ts = new Date().toISOString().
+        replace(/T/, ' ').      // replace T with a space
+        replace(/\..+/, '')     // delete the dot and everything after;
+
+    try {
+        const privateKey  = fs.readFileSync('./ssl/key.pem', 'utf8');
+        const certificate = fs.readFileSync('./ssl/cert.pem', 'utf8');
+        const ca          = fs.readFileSync('./ssl/cert.pem', 'utf8'); // For self-signed certificate, use the same cert.pem
+
+        //const
+        newCredentials = {
+            key: privateKey,
+            cert: certificate,
+            ca: ca,
+        };
+
+        credentials.key  = newCredentials.key;
+        credentials.cert = newCredentials.cert;
+        credentials.ca   = newCredentials.ca;
+
+        httpsServer.setSecureContext(credentials)
+
+        console.log(`${ts} - SSL certificates updated`);
+    } catch (error) {
+        console.error(`${ts} - Error updating SSL certificates: `, error);
+    }
+}
+
+
+// Example from stackoverflow
+function watchFile(path, callback) {
+    // Check if it's a link
+    fs.lstat(path, function(err, stats) {
+        if(err) {
+            // Handle errors
+            return callback(err);
+        } else if(stats.isSymbolicLink()) {
+            // Read symlink
+            fs.readlink(path, function(err, realPath) {
+                // Handle errors
+                if(err) return callback(err);
+                // Watch the real file
+                fs.watch(realPath, callback);
+            });
+        } else {
+            // It's not a symlink, just watch it
+            fs.watch(path, callback);
+        }
+    });
+}
+
+// ChatGPT solution
+function watchCertFile(certFile) {
+    fs.realpath(certFile, (err, resolvedPath) => {
+        if (err) {
+            console.error(`Error resolving path for ${certFile}:`, err);
+            return;
+        }
+
+        ts = new Date().toISOString().
+            replace(/T/, ' ').      // replace T with a space
+            replace(/\..+/, '')     // delete the dot and everything after;
+        console.log(`${ts} - Watching ${certFile} -> ${resolvedPath}`);
+
+        fs.watch(resolvedPath, (eventType) => {
+            if (eventType === 'change') {
+                ts = new Date().toISOString().
+                    replace(/T/, ' ').      // replace T with a space
+                    replace(/\..+/, '')     // delete the dot and everything after;
+                console.log(`${ts} - ${certFile} -> ${resolvedPath} changed. Updating SSL certificates...`);
+                updateCerts();
+            }
+        });
+    });
+}
 
 module.exports = { app, httpServer, httpsServer }; // Export the servers
