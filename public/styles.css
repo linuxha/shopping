@@ -44,3 +44,21 @@ color1 {
 div#brim {
     broder: ridge;
 }
+
+.inventory {
+  font-size: 1.5em; /* Adjust this value to your desired font size */
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+  .inventory {
+    font-size: 1.8em;
+  }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+  .inventory {
+    font-size: 2.0em;
+  }
+}
