@@ -28,7 +28,7 @@
   <h1>Grocery List</h1>
   <!-- h2><%= new Date().toLocaleDateString() %> Groceries list</h2 -->
   <h2><%= new Date().toDateString() %> Groceries list</h2>
-  <ul>
+  <ul class="inventory">
     <% sortedItems.forEach((item) => { %>
       <li>- [ ] <%= item %></li>
     <% }); %>
