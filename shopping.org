@@ -1,0 +1,1356 @@
+* Shopping application built by ChatGPT4
+
+https://chat.openai.com/chat/
+
+file:///home/njc/dev/git/shopping
+
+To run:
+
+1. cd /home/njc/dev/git/shopping
+2. node ./app.js
+3. Open browser to: http://mozart.uucp:13000/
+
+** Chat
+
+Model: GPT-4
+
+Neil Cherry
+As a user I want a web interface writen in node.js that allows me to use the browser to select items, sorted by aisle. Make the aisles hideable/unhidden. And when done, format the selected items, sorted by aisle in the following format:
+
+ * Today's date Groceries list
+  - [ ]  Colgate Total toothpaste
+  - [ ]  listerine
+  - [ ]  4” J&J Bandaid gauze pads
+  - [ ]  J&J cloth tape
+  - [ ]  midol complete
+
+Get the inventory list with items and aisles from the json file inventory.json containing:
+
+[
+    {"item": "Colgate Total toothpaste", "aisle":"1"},
+    {"item": "toothbrush", "aisle": "1"},
+    {"item": "listerine", "aisle":"2"},
+    {"item": "4” J&J Bandaid gauze pads", "aisle":"3"}
+];
+
+To create a web interface using Node.js, you can use the Express.js framework along with EJS as the view engine. First, you need to set up your project, then implement the frontend and backend logic. Here's an outline of the process:
+
+Setup your project:
+
+Install Node.js
+Initialize your project with npm init
+Install the required packages: npm install express ejs body-parser
+Create your project structure:
+
+Create a folder named 'views' for storing your EJS templates
+Create a folder named 'public' for storing your CSS and JS files
+Implement the backend:
+
+Create a file named 'app.js' to initialize your Express app
+Read the inventory from the 'inventory.json' file
+Create a route to render the index page with the inventory data
+Create a route to handle form submission and generate the sorted grocery list
+Implement the frontend:
+
+Create an EJS template file named 'index.ejs' in the 'views' folder
+Display the inventory items grouped by aisle with checkboxes
+Add JavaScript code to show/hide aisles and generate the sorted list
+Here's the code for 'app.js':
+
+javascript
+Copy code
+const express = require('express');
+const bodyParser = require('body-parser');
+const fs = require('fs');
+const app = express();
+
+app.use(express.static('public'));
+app.set('view engine', 'ejs');
+app.use(bodyParser.urlencoded({ extended: true }));
+
+const inventory = JSON.parse(fs.readFileSync('inventory.json', 'utf-8'));
+
+app.get('/', (req, res) => {
+  res.render('index', { inventory });
+});
+
+app.post('/generate-list', (req, res) => {
+  const selectedItems = req.body.items;
+  const sortedItems = selectedItems.sort((a, b) => {
+    return inventory.find(x => x.item === a).aisle - inventory.find(x => x.item === b).aisle;
+  });
+  res.send({ sortedItems });
+});
+
+app.listen(3000, () => {
+  console.log('Server started on port 3000');
+});
+Here's the code for 'index.ejs':
+
+html
+Copy code
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grocery List Generator</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body>
+  <h1>Grocery List Generator</h1>
+  <form id="grocery-form">
+    <% inventory.forEach((item) => { %>
+      <div class="aisle" data-aisle="<%= item.aisle %>">
+        <label>
+          <input type="checkbox" name="items" value="<%= item.item %>">
+          <%= item.item %>
+        </label>
+      </div>
+    <% }); %>
+    <button type="submit">Generate List</button>
+  </form>
+  <div id="grocery-list"></div>
+</body>
+</html>
+Create a file named 'styles.css' in the 'public' folder for your styles:
+
+css
+Copy code
+body {
+  font-family: Arial, sans-serif;
+}
+
+.aisle {
+  margin-bottom: 5px;
+}
+
+h1 {
+  margin-bottom: 20px;
+}
+And create a file named 'script.js' in the 'public' folder for your JavaScript:
+
+javascript
+Copy code
+document.getElementById('grocery-form').addEventListener('submit', async (e)
+
+
+
+Neil Cherry
+continue
+Here's the continuation of the 'script.js' file:
+
+javascript
+Copy code
+e.preventDefault();
+const formData = new FormData(e.target);
+const items = Array.from(formData.getAll('items'));
+const response = await fetch('/generate-list', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ items }),
+});
+const data = await response.json();
+const sortedItems = data.sortedItems;
+const listContainer = document.getElementById('grocery-list');
+listContainer.innerHTML = `<h2>${new Date().toLocaleDateString()} Groceries list</h2>`;
+const list = document.createElement('ul');
+sortedItems.forEach((item) => {
+  const listItem = document.createElement('li');
+  listItem.innerHTML = `- [ ] ${item}`;
+  list.appendChild(listItem);
+});
+listContainer.appendChild(list);
+});
+This JavaScript code will submit the form data to the server, receive the sorted list, and display it on the page.
+
+To show/hide aisles, you can add a button to toggle the visibility of the aisles in 'index.ejs':
+
+html
+Copy code
+<button type="button" id="toggle-aisles">Toggle Aisles</button>
+Then, add the following code to 'script.js':
+
+javascript
+Copy code
+const aisles = document.querySelectorAll('.aisle');
+const toggleAislesBtn = document.getElementById('toggle-aisles');
+let aislesVisible = true;
+
+toggleAislesBtn.addEventListener('click', () => {
+  aislesVisible = !aislesVisible;
+  aisles.forEach((aisle) => {
+    aisle.style.display = aislesVisible ? 'block' : 'none';
+  });
+});
+Now, you can run the app by executing node app.js in your terminal. Visit http://localhost:3000 in your browser to see the web interface. You can select items from the inventory, hide and unhide aisles using the "Toggle Aisles" button, and generate a formatted grocery list sorted by aisle.
+
+
+
+
+Neil Cherry
+redisplay the entire script.js
+Here's the complete 'script.js' file:
+
+javascript
+Copy code
+document.getElementById('grocery-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const items = Array.from(formData.getAll('items'));
+  const response = await fetch('/generate-list', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items }),
+  });
+  const data = await response.json();
+  const sortedItems = data.sortedItems;
+  const listContainer = document.getElementById('grocery-list');
+  listContainer.innerHTML = `<h2>${new Date().toLocaleDateString()} Groceries list</h2>`;
+  const list = document.createElement('ul');
+  sortedItems.forEach((item) => {
+    const listItem = document.createElement('li');
+    listItem.innerHTML = `- [ ] ${item}`;
+    list.appendChild(listItem);
+  });
+  listContainer.appendChild(list);
+});
+
+const aisles = document.querySelectorAll('.aisle');
+const toggleAislesBtn = document.getElementById('toggle-aisles');
+let aislesVisible = true;
+
+toggleAislesBtn.addEventListener('click', () => {
+  aislesVisible = !aislesVisible;
+  aisles.forEach((aisle) => {
+    aisle.style.display = aislesVisible ? 'block' : 'none';
+  });
+});
+This script includes the following functionality:
+
+Handling form submission to generate a sorted grocery list
+Toggling the visibility of aisles using the "Toggle Aisles" button
+
+
+
+Neil Cherry
+The show/hide needs to be on the web page not the generated results 
+I apologize for the confusion. If you want to show/hide aisles on the web page itself, you can update the 'index.ejs' file to include a button for each aisle, and update the 'script.js' file to handle the show/hide functionality. Here's how you can modify the code:
+
+Update 'index.ejs':
+First, group items by aisle and add a button for each aisle to toggle its visibility:
+
+html
+Copy code
+<% const groupedInventory = {}; %>
+<% inventory.forEach((item) => { %>
+  <% if (!groupedInventory[item.aisle]) { %>
+    <% groupedInventory[item.aisle] = []; %>
+  <% } %>
+  <% groupedInventory[item.aisle].push(item); %>
+<% }); %>
+
+<% Object.keys(groupedInventory).forEach((aisle) => { %>
+  <button type="button" class="toggle-aisle" data-aisle="<%= aisle %>">
+    Toggle Aisle <%= aisle %>
+  </button>
+  <div class="aisle-items" data-aisle="<%= aisle %>">
+    <% groupedInventory[aisle].forEach((item) => { %>
+      <div class="item">
+        <label>
+          <input type="checkbox" name="items" value="<%= item.item %>">
+          <%= item.item %>
+        </label>
+      </div>
+    <% }); %>
+  </div>
+<% }); %>
+Update 'script.js':
+Add the following code to handle the show/hide functionality for each aisle:
+
+javascript
+Copy code
+const toggleAisleButtons = document.querySelectorAll('.toggle-aisle');
+const aisleItemsContainers = document.querySelectorAll('.aisle-items');
+
+toggleAisleButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    const aisle = button.getAttribute('data-aisle');
+    const aisleItems = document.querySelector(`.aisle-items[data-aisle="${aisle}"]`);
+    const isHidden = aisleItems.style.display === 'none';
+    aisleItems.style.display = isHidden ? 'block' : 'none';
+  });
+});
+With these changes, you will have a "Toggle Aisle" button for each aisle on the web page. When you click on a button, it will show/hide the items in the corresponding aisle. The generated results remain unchanged.
+
+
+
+
+Neil Cherry
+update and redisplay index.ejs
+Here's the updated 'index.ejs' file:
+
+html
+Copy code
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grocery List Generator</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body>
+  <h1>Grocery List Generator</h1>
+  <form id="grocery-form">
+    <% const groupedInventory = {}; %>
+    <% inventory.forEach((item) => { %>
+      <% if (!groupedInventory[item.aisle]) { %>
+        <% groupedInventory[item.aisle] = []; %>
+      <% } %>
+      <% groupedInventory[item.aisle].push(item); %>
+    <% }); %>
+
+    <% Object.keys(groupedInventory).forEach((aisle) => { %>
+      <button type="button" class="toggle-aisle" data-aisle="<%= aisle %>">
+        Toggle Aisle <%= aisle %>
+      </button>
+      <div class="aisle-items" data-aisle="<%= aisle %>">
+        <% groupedInventory[aisle].forEach((item) => { %>
+          <div class="item">
+            <label>
+              <input type="checkbox" name="items" value="<%= item.item %>">
+              <%= item.item %>
+            </label>
+          </div>
+        <% }); %>
+      </div>
+    <% }); %>
+    <button type="submit">Generate List</button>
+  </form>
+  <div id="grocery-list"></div>
+</body>
+</html>
+This updated 'index.ejs' file groups the inventory items by aisle and creates a "Toggle Aisle" button for each aisle. When you click on a button, it will show or hide the items in the corresponding aisle using the updated JavaScript code in 'script.js'. The generated grocery list functionality remains the same.
+
+
+
+
+Neil Cherry
+script.css mime type is text/html which is incorrect
+
+I apologize for the confusion. There might be a typo in your question, as the file should be named 'styles.css' instead of 'script.css'. In case you have any issues with the MIME type, please make sure you are serving the static files correctly. Here's the correct way to serve static files in the 'app.js' file:
+
+javascript
+Copy code
+app.use(express.static('public'));
+With this line, you should not encounter any MIME type issues for the 'styles.css' file. If you still face any issues, please provide more information about the error, and I'll be happy to help you resolve it.
+
+
+
+
+Neil Cherry
+Chrome's error message is:
+Refused to apply style from 'http://mozart.uucp:13000/styles.css' because its MIME type ('text/html') is not a supported stylesheet MIME type, and strict MIME checking is enabled.
+It seems that the server is serving your 'styles.css' file with an incorrect MIME type. This might be caused by an incorrect route configuration or a missing file. Please make sure that your 'styles.css' file is in the 'public' folder and that the 'app.js' file contains the line app.use(express.static('public'));.
+
+If you still face the issue, you can try to explicitly set the MIME type for the CSS files by adding the following lines to your 'app.js' file:
+
+javascript
+Copy code
+const path = require('path');
+
+app.use('/styles.css', (req, res) => {
+  res.setHeader('Content-Type', 'text/css');
+  res.sendFile(path.join(__dirname, 'public', 'styles.css'));
+});
+This code will create a route for '/styles.css' and set the Content-Type header to 'text/css' explicitly. Make sure to require the 'path' module at the beginning of your 'app.js' file by adding const path = require('path');. This should resolve the MIME type issue you are facing in Google Chrome.
+
+
+
+
+Neil Cherry
+The toggle button doesn't hide the aisle div
+Apologies for the oversight. To resolve this issue, you should modify the 'script.js' file to correctly hide/show the aisle div based on the state of the corresponding button. Here's the corrected code:
+
+javascript
+Copy code
+const toggleAisleButtons = document.querySelectorAll('.toggle-aisle');
+const aisleItemsContainers = document.querySelectorAll('.aisle-items');
+
+toggleAisleButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    const aisle = button.getAttribute('data-aisle');
+    const aisleItems = document.querySelector(`.aisle-items[data-aisle="${aisle}"]`);
+    const isHidden = aisleItems.style.display === 'none';
+    aisleItems.style.display = isHidden ? 'block' : 'none';
+    button.textContent = isHidden ? `Hide Aisle ${aisle}` : `Show Aisle ${aisle}`;
+  });
+});
+Additionally, update the button's text in the 'index.ejs' file to display "Hide Aisle" initially:
+
+html
+Copy code
+<button type="button" class="toggle-aisle" data-aisle="<%= aisle %>">
+  Hide Aisle <%= aisle %>
+</button>
+With these changes, the "Toggle Aisle" button should now correctly show and hide the aisle div. The button text will also change to reflect the current state of the corresponding aisle (either hidden or visible).
+
+
+
+
+Neil Cherry
+Can you show me the code for the generate-list
+
+Certainly! In the 'app.js' file, you need to add a route to handle the POST request for '/generate-list'. The route will receive the selected items, sort them by aisle, and return the sorted list. Here's the code to achieve this:
+
+javascript
+Copy code
+app.post('/generate-list', express.json(), (req, res) => {
+  const selectedItems = req.body.items;
+  const itemsWithAisles = selectedItems.map((item) => {
+    const inventoryItem = inventory.find((i) => i.item === item);
+    return { item, aisle: inventoryItem.aisle };
+  });
+  itemsWithAisles.sort((a, b) => parseInt(a.aisle) - parseInt(b.aisle));
+  const sortedItems = itemsWithAisles.map((item) => item.item);
+  res.json({ sortedItems });
+});
+Make sure you have the following line at the beginning of your 'app.js' file:
+
+javascript
+Copy code
+const express = require('express');
+This '/generate-list' route will:
+
+Receive the selected items from the client-side in the POST request.
+Create a new array containing the selected items with their corresponding aisle numbers.
+Sort the new array based on the aisle numbers.
+Create a sorted list containing only the item names (without aisle numbers).
+Return the sorted list as a JSON object.
+When you submit the form on the web page, the JavaScript code in 'script.js' sends a POST request to this route, receives the sorted list, and displays it on the page.
+
+
+
+
+Neil Cherry
+Generate as a new page and sort by aisle
+To generate the sorted grocery list on a new page, you can make the following changes:
+
+Modify the form in index.ejs to submit the form data to the /generate-list route:
+html
+Copy code
+<form id="grocery-form" action="/generate-list" method="post">
+  ...
+  <button type="submit">Generate List</button>
+</form>
+Update the server-side code in app.js to render a new page with the sorted grocery list. First, remove the existing POST route for /generate-list and replace it with the following code:
+javascript
+Copy code
+app.post('/generate-list', (req, res) => {
+  const selectedItems = req.body.items;
+  const itemsWithAisles = selectedItems.map((item) => {
+    const inventoryItem = inventory.find((i) => i.item === item);
+    return { item, aisle: inventoryItem.aisle };
+  });
+  itemsWithAisles.sort((a, b) => parseInt(a.aisle) - parseInt(b.aisle));
+  const sortedItems = itemsWithAisles.map((item) => item.item);
+  res.render('list', { sortedItems });
+});
+This updated POST route will render a new page named list.ejs with the sorted grocery list.
+
+Create a new EJS template file named list.ejs inside the views folder:
+html
+Copy code
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grocery List</title>
+</head>
+<body>
+  <h1>Grocery List</h1>
+  <h2><%= new Date().toLocaleDateString() %> Groceries list</h2>
+  <ul>
+    <% sortedItems.forEach((item) => { %>
+      <li>- [ ] <%= item %></li>
+    <% }); %>
+  </ul>
+  <a href="/">Back to selection</a>
+</body>
+</html>
+This new template will display the sorted grocery list and provide a link to return to the item selection page.
+
+Remove the form submission event listener in script.js, as it's no longer needed:
+javascript
+Copy code
+// Remove this block of code
+document.getElementById('grocery-form').addEventListener('submit', async (e) => {
+  ...
+});
+Now, when you submit the form on the item selection page, the server will generate a sorted grocery list and render it on a new page named list.ejs. The list will be sorted by aisle, and you can return to the item selection page by clicking the "Back to selection" link.
+
+
+
+
+Neil Cherry
+show updated apps.js
+Here's the updated 'app.js' file:
+
+javascript
+Copy code
+const express = require('express');
+const path = require('path');
+const inventory = require('./inventory.json');
+
+const app = express();
+
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
+
+app.use(express.urlencoded({ extended: false }));
+app.use(express.static('public'));
+
+app.get('/', (req, res) => {
+  res.render('index', { inventory });
+});
+
+app.post('/generate-list', (req, res) => {
+  const selectedItems = req.body.items;
+  const itemsWithAisles = selectedItems.map((item) => {
+    const inventoryItem = inventory.find((i) => i.item === item);
+    return { item, aisle: inventoryItem.aisle };
+  });
+  itemsWithAisles.sort((a, b) => parseInt(a.aisle) - parseInt(b.aisle));
+  const sortedItems = itemsWithAisles.map((item) => item.item);
+  res.render('list', { sortedItems });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+This updated 'app.js' file includes:
+
+The GET route for the index page, which renders the 'index.ejs' template with the inventory data.
+The POST route for '/generate-list', which processes the submitted form data, sorts the selected items by aisle, and renders the 'list.ejs' template with the sorted items.
+The server setup and listening on the specified port.
+Make sure to remove the form submission event listener from the 'script.js' file, as it is no longer needed for this implementation.
+
+
+
+
+Neil Cherry
+list.ejs does not seem to be handled by app.js
+I apologize for the confusion. It appears that the issue is due to not parsing the incoming form data correctly. To fix this issue, please make the following changes:
+
+Update the app.js file to include the express.json() middleware as well:
+javascript
+Copy code
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+In the index.ejs file, update the form to include the enctype attribute:
+html
+Copy code
+<form id="grocery-form" action="/generate-list" method="post" enctype="application/x-www-form-urlencoded">
+  ...
+  <button type="submit">Generate List</button>
+</form>
+Now, your app.js file should correctly handle the form data and render the list.ejs page with the sorted grocery list. Make sure that the list.ejs file is located in the views folder as mentioned earlier.
+
+
+
+
+Neil Cherry
+please generate test cases
+To create test cases for your application, you can use a testing library like Jest. Here's how you can set up some basic test cases:
+
+Install Jest and its dependencies:
+bash
+Copy code
+npm install --save-dev jest supertest
+Create a new folder named tests at the root level of your project.
+
+Inside the tests folder, create a new file named app.test.js.
+
+Add the following test cases to app.test.js:
+
+javascript
+Copy code
+const request = require('supertest');
+const app = require('../app');
+
+describe('GET /', () => {
+  it('should respond with status 200', async () => {
+    const response = await request(app).get('/');
+    expect(response.statusCode).toBe(200);
+  });
+
+  it('should display the correct title', async () => {
+    const response = await request(app).get('/');
+    expect(response.text).toContain('<title>Grocery List Generator</title>');
+  });
+});
+
+describe('POST /generate-list', () => {
+  it('should respond with status 200', async () => {
+    const response = await request(app)
+      .post('/generate-list')
+      .send('items=Colgate%20Total%20toothpaste&items=toothbrush&items=listerine');
+    expect(response.statusCode).toBe(200);
+  });
+
+  it('should display the sorted grocery list', async () => {
+    const response = await request(app)
+      .post('/generate-list')
+      .send('items=Colgate%20Total%20toothpaste&items=toothbrush&items=listerine');
+    expect(response.text).toContain('<title>Grocery List</title>');
+    expect(response.text).toContain('- [ ] Colgate Total toothpaste');
+    expect(response.text).toContain('- [ ] toothbrush');
+    expect(response.text).toContain('- [ ] listerine');
+  });
+});
+In the package.json file, update the "test" script to use Jest:
+json
+Copy code
+"scripts": {
+  "test": "jest"
+}
+Update your app.js file to export the app variable:
+javascript
+Copy code
+// Add the following line at the end of your app.js file
+module.exports = app;
+Now, you can run the test cases using the following command:
+
+bash
+Copy code
+npm test
+These test cases cover basic functionality such as checking if the main page and the POST request to /generate-list return the expected status codes and content. You can extend the test cases to cover more scenarios as needed.
+
+
+
+
+Neil Cherry
+show test cases for generate-list
+Here's an example of test cases specifically for the /generate-list route:
+
+javascript
+Copy code
+const request = require('supertest');
+const app = require('../app');
+
+describe('POST /generate-list', () => {
+  it('should respond with status 200', async () => {
+    const response = await request(app)
+      .post('/generate-list')
+      .send('items=Colgate%20Total%20toothpaste&items=toothbrush&items=listerine');
+    expect(response.statusCode).toBe(200);
+  });
+
+  it('should display the sorted grocery list', async () => {
+    const response = await request(app)
+      .post('/generate-list')
+      .send('items=Colgate%20Total%20toothpaste&items=toothbrush&items=listerine');
+    expect(response.text).toContain('<title>Grocery List</title>');
+    expect(response.text).toContain('- [ ] Colgate Total toothpaste');
+    expect(response.text).toContain('- [ ] toothbrush');
+    expect(response.text).toContain('- [ ] listerine');
+  });
+
+  it('should sort items by aisle', async () => {
+    const response = await request(app)
+      .post('/generate-list')
+      .send('items=listerine&items=4%E2%80%9D%20J%26J%20Bandaid%20gauze%20pads&items=Colgate%20Total%20toothpaste');
+    const toothpasteIndex = response.text.indexOf('Colgate Total toothpaste');
+    const listerineIndex = response.text.indexOf('listerine');
+    const bandaidIndex = response.text.indexOf('4” J&J Bandaid gauze pads');
+    expect(toothpasteIndex).toBeLessThan(listerineIndex);
+    expect(listerineIndex).toBeLessThan(bandaidIndex);
+  });
+});
+These test cases cover:
+
+Checking if the POST request to /generate-list returns the expected status code (200).
+Verifying that the generated grocery list contains the correct items.
+Ensuring that the items are sorted by aisle.
+You can include these test cases in your app.test.js file or create a separate file for them. Make sure to run the tests using the npm test command after updating the test cases.
+
+
+
+
+Neil Cherry
+as a user I'd like to be able to add items to the list
+To allow users to add items to the list, you can create a simple form on the list.ejs page for submitting new items, and then add a POST route to handle the form submission.
+
+Update the list.ejs file to include a form for adding items:
+html
+Copy code
+<!-- Add this form to your list.ejs file -->
+<form id="add-item-form" action="/add-item" method="post">
+  <label for="new-item">Add Item:</label>
+  <input type="text" name="new-item" id="new-item" required>
+  <button type="submit">Add</button>
+</form>
+Add a new POST route in app.js to handle the form submission and redirect back to the list page:
+javascript
+Copy code
+app.post('/add-item', (req, res) => {
+  const newItem = req.body['new-item'];
+  const aisle = "Unknown"; // Set a default aisle for new items
+  inventory.push({ item: newItem, aisle: aisle });
+  res.redirect('/'); // Redirect back to the item selection page
+});
+Make sure to include the express.json() middleware in your app.js file:
+
+javascript
+Copy code
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+Now, users can add new items to the list by submitting the form on the list.ejs page. The new item will be added to the inventory with a default aisle, and the user will be redirected back to the item selection page. To persist the new items, you may want to update the inventory.json file or use a database to store the inventory data.
+
+
+
+
+Neil Cherry
+Add item needs to accept the name of the item and the aisle it's in
+To allow users to add items with their aisle information, update the form on the list.ejs page and the POST route in app.js:
+
+Update the list.ejs file to include input fields for the item name and aisle:
+html
+Copy code
+<!-- Update the form in your list.ejs file -->
+<form id="add-item-form" action="/add-item" method="post">
+  <label for="new-item">Item Name:</label>
+  <input type="text" name="new-item" id="new-item" required>
+  
+  <label for="aisle">Aisle:</label>
+  <input type="text" name="aisle" id="aisle" required>
+  
+  <button type="submit">Add</button>
+</form>
+Update the POST route in app.js to handle the new aisle input:
+javascript
+Copy code
+app.post('/add-item', (req, res) => {
+  const newItem = req.body['new-item'];
+  const aisle = req.body['aisle'];
+  inventory.push({ item: newItem, aisle: aisle });
+  res.redirect('/'); // Redirect back to the item selection page
+});
+Now, users can add new items along with their aisle information by submitting the updated form on the list.ejs page. The new item will be added to the inventory with the specified aisle, and the user will be redirected back to the item selection page. To persist the new items, you may want to update the inventory.json file or use a database to store the inventory data.
+
+
+
+
+Neil Cherry
+the app also needs to update this information to the inventory.json on the server. Also make a backup before updating
+To update the inventory.json file on the server when a new item is added, you can use the fs module to write the updated inventory data to the file. Additionally, create a backup of the inventory.json file before updating it.
+
+Require the fs module in your app.js:
+javascript
+Copy code
+const fs = require('fs');
+Create a helper function to backup the inventory.json file:
+javascript
+Copy code
+function backupInventory() {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const backupFile = `./backups/inventory-backup-${timestamp}.json`;
+  fs.copyFile('./inventory.json', backupFile, (err) => {
+    if (err) {
+      console.error('Error creating backup:', err);
+    } else {
+      console.log('Backup created:', backupFile);
+    }
+  });
+}
+Update the POST route in app.js to backup and update the inventory.json file:
+javascript
+Copy code
+app.post('/add-item', (req, res) => {
+  const newItem = req.body['new-item'];
+  const aisle = req.body['aisle'];
+  inventory.push({ item: newItem, aisle: aisle });
+
+  // Backup the current inventory
+  backupInventory();
+
+  // Update the inventory.json file
+  fs.writeFile('./inventory.json', JSON.stringify(inventory, null, 2), (err) => {
+    if (err) {
+      console.error('Error updating inventory:', err);
+      res.status(500).send('Error updating inventory.');
+    } else {
+      console.log('Inventory updated.');
+      res.redirect('/'); // Redirect back to the item selection page
+    }
+  });
+});
+Create a backups folder in your project root to store the backup files.
+Now, when a new item is added, the application will create a backup of the inventory.json file with a timestamp in the backups folder and then update the original inventory.json file with the new item information.
+
+Keep in mind that this approach works well for small-scale applications with infrequent updates. For a more robust solution, you might consider using a database to store and manage your inventory data.
+
+
+
+
+Neil Cherry
+write a git nessage for these changes
+sql
+Copy code
+feat: Add new items to inventory with aisle info and update inventory.json
+
+- Update list.ejs to include input fields for item name and aisle
+- Add POST route in app.js to handle the new item and aisle inputs
+- Add backup and update functionality for inventory.json using fs module
+- Create a backups folder for storing backup inventory files
+
+This feature allows users to add new items along with their aisle information to the inventory. The application now creates a backup of the inventory.json file before updating it with the new item data.
+
+
+
+Neil Cherry
+Add support for https
+To add HTTPS support to your Node.js application, you'll need an SSL certificate (a private key and a public certificate). You can use self-signed certificates for testing purposes, but for production use, it's recommended to obtain a certificate from a Certificate Authority (CA).
+
+Here's how to add HTTPS support to your application:
+
+Create a new folder named ssl in your project root directory.
+
+Generate a self-signed SSL certificate (for testing purposes):
+
+bash
+Copy code
+openssl req -x509 -newkey rsa:2048 -keyout ssl/key.pem -out ssl/cert.pem -days 365
+This will create a private key key.pem and a public certificate cert.pem in the ssl folder. Answer the questions prompted by the command to generate the certificate.
+
+Update your app.js file to serve your application over HTTPS:
+javascript
+Copy code
+const fs = require('fs');
+const https = require('https');
+
+// Read the SSL certificate files
+const privateKey = fs.readFileSync('./ssl/key.pem', 'utf8');
+const certificate = fs.readFileSync('./ssl/cert.pem', 'utf8');
+const ca = fs.readFileSync('./ssl/cert.pem', 'utf8'); // For self-signed certificate, use the same cert.pem
+
+const credentials = {
+  key: privateKey,
+  cert: certificate,
+  ca: ca,
+};
+
+// Create an HTTPS service
+const httpsServer = https.createServer(credentials, app);
+
+// Set the HTTPS server to listen on a specific port (e.g., 8443)
+httpsServer.listen(8443, () => {
+  console.log('HTTPS server running on port 8443');
+});
+Update your package.json script to start your application:
+json
+Copy code
+"scripts": {
+  "start": "node app.js"
+}
+Now, you can run your application using npm start, and it will serve your application over HTTPS at https://localhost:8443.
+
+Note: Browsers will show a security warning when accessing your application because the self-signed certificate is not trusted by default. You can proceed with caution for testing purposes, but for production use, obtain a valid SSL certificate from a trusted Certificate Authority (CA).
+
+linuxha@linuxha.com
+add a feature where the new file in the lists directory is handled by an external script called cav.sh
+To run an external script when a new file is created in the lists directory, you can use the child_process module to execute the script. Here's an example of how you can modify your code:
+
+Import the child_process module at the top of your app.js file:
+javascript
+Copy code
+
+const { exec } = require('child_process');
+
+Modify the saveListToFile function to execute the external script cav.sh after successfully saving the list to a file:
+javascript
+Copy code
+
+function saveListToFile(sortedItems) {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const fileName = `./lists/list-${timestamp}.txt`;
+
+  const fileContent = sortedItems.reduce((content, item) => {
+    return content + `- [ ] ${item}\n`;
+  }, '');
+
+  fs.writeFile(fileName, fileContent, (err) => {
+    if (err) {
+      console.error('Error writing list to file:', err);
+    } else {
+      console.log('List saved to file:', fileName);
+
+      // Execute the external script with the new file as an argument
+      exec(`./cav.sh ${fileName}`, (err, stdout, stderr) => {
+        if (err) {
+          console.error('Error executing cav.sh:', err);
+          return;
+        }
+        if (stdout) console.log('cav.sh stdout:', stdout);
+        if (stderr) console.log('cav.sh stderr:', stderr);
+      });
+    }
+  });
+}
+
+Now, your application will execute the cav.sh script and pass the path of the newly created file as an argument whenever a new list is generated.
+
+Make sure that the cav.sh script is executable (chmod +x cav.sh) and is located in the root directory of your application. The script will receive the file path as its first argument ($1). You can now handle the file within your cav.sh script as needed.
+
+linuxha@linuxha.com
+add a feature where a port number can be passed from the command line to override the default listening port
+To allow a port number to be passed from the command line to override the default listening port, you can use the process.argv array to access the command line arguments. Here's an example of how you can modify your code:
+
+Update the default port number declaration in your app.js file:
+javascript
+Copy code
+const myHTTP  = process.argv[2] ? parseInt(process.argv[2]) : 13000;
+const myHTTPS = process.argv[3] ? parseInt(process.argv[3]) : 13443;
+This code checks if there are command line arguments provided for the ports. If so, it uses them; otherwise, it falls back to the default ports.
+
+Now, you can start your server by passing the ports as command line arguments:
+yaml
+Copy code
+node app.js 8080 8443
+With these changes, your application will use the provided ports when available, and fallback to the default ports if no ports are provided.
+
+
+
+
+linuxha@linuxha.com
+check for the cert.pem file and key.pem files and if they don't exist do not listen on the https server
+To check if the cert.pem and key.pem files exist before starting the HTTPS server, you can use the fs.existsSync function. If either of the files does not exist, the HTTPS server won't be started. Here's an example of how you can modify your code:
+
+Update your app.js file by wrapping the HTTPS server code in a conditional block:
+javascript
+Copy code
+// Read the SSL certificate files
+const privateKeyPath = './ssl/key.pem';
+const certificatePath = './ssl/cert.pem';
+const caPath = './ssl/cert.pem'; // For self-signed certificate, use the same cert.pem
+
+if (fs.existsSync(privateKeyPath) && fs.existsSync(certificatePath) && fs.existsSync(caPath)) {
+  const privateKey  = fs.readFileSync(privateKeyPath, 'utf8');
+  const certificate = fs.readFileSync(certificatePath, 'utf8');
+  const ca = fs.readFileSync(caPath, 'utf8');
+
+  const credentials = {
+    key: privateKey,
+    cert: certificate,
+    ca: ca,
+  };
+
+  // Create an HTTPS service
+  const httpsServer = https.createServer(credentials, app);
+
+  // Set the HTTPS server to listen on a specific port (e.g., 8443)
+  httpsServer.listen(myHTTPS, () => {
+    console.log(`HTTPS server running on port ${myHTTPS}`);
+  });
+} else {
+  console.log('SSL certificate files not found. Skipping HTTPS server.');
+}
+With these changes, your application will check if the cert.pem and key.pem files exist before starting the HTTPS server. If either of the files does not exist, the HTTPS server won't be started, and a message will be logged to the console.
+
+
+
+
+linuxha@linuxha.com
+add support for a favicon.ico
+To add support for a favicon.ico, you will need to serve the favicon.ico file using the express.static middleware. Follow these steps to add favicon support:
+
+Place the favicon.ico file in the public folder of your application.
+
+In your app.js file, add the following line after the existing app.use(express.static('public')); line:
+
+javascript
+Copy code
+app.use('/favicon.ico', express.static('public/favicon.ico'));
+This code tells Express to serve the favicon.ico file when a request is made for /favicon.ico.
+
+Now, your application will serve the favicon.ico file from the public folder. Most modern browsers will automatically request the favicon.ico file when a user visits your site, so you don't need to add a <link> tag in your HTML files. However, if you want to explicitly reference the favicon.ico in your HTML, you can add the following line to the <head> section of your HTML files:
+
+html
+Copy code
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+With these changes, your application will support and serve the favicon.ico file.
+
+
+
+
+linuxha@linuxha.com
+generate a brown paper bag favicon.ico
+As an AI language model, I am unable to create image files directly. However, I can guide you through the process of creating a simple brown paper bag favicon.ico.
+
+Find or create a brown paper bag image: Search for a brown paper bag image online or create your own using a graphics editor like Adobe Illustrator or Inkscape. Ensure that you are using a royalty-free image or have the necessary permissions to use the image.
+
+Edit the image: Crop the image to a square aspect ratio, making sure the brown paper bag is at the center. If necessary, adjust the colors or add effects to make the bag visually appealing.
+
+Resize the image: Favicon.ico files are usually small, with dimensions like 16x16, 32x32, or 48x48 pixels. Resize your brown paper bag image to the desired dimensions using a graphics editor or an online image resizing tool.
+
+Convert the image to .ico format: Use an online converter like favicon.io or a graphics editor to convert your resized image to the .ico format.
+
+Add the favicon.ico to your project: Place the favicon.ico file in the public folder of your application and follow the steps from the previous response to serve the favicon.ico file using the express.static middleware.
+
+With these steps, you can create and use a brown paper bag favicon.ico for your application.
+
+// Created with gimp, copied an image of a brown paper bag, scaled it to 48x48,
+// exported as .ico extension
+
+
+
+
+
+linuxha@linuxha.com
+provide a way to delete items and add test cases for it
+To provide a way to delete items, you can create a new route, DELETE /item/:itemName, that will handle the item deletion. First, update the app.js file to include the new route:
+
+javascript
+Copy code
+// app.js
+
+// ...
+
+app.delete('/item/:itemName', (req, res) => {
+  const itemName = req.params.itemName;
+
+  const itemIndex = inventory.findIndex((i) => i.item === itemName);
+  if (itemIndex === -1) {
+    res.status(404).send('Item not found.');
+    return;
+  }
+
+  inventory.splice(itemIndex, 1);
+
+  // Backup the current inventory
+  backupInventory();
+
+  // Update the inventory.json file
+  fs.writeFile('./inventory.json', JSON.stringify(inventory, null, 2), (err) => {
+    if (err) {
+      console.error('Error updating inventory:', err);
+      res.status(500).send('Error updating inventory.');
+    } else {
+      console.log('Item deleted from inventory.');
+      res.sendStatus(200); // Send success status
+    }
+  });
+});
+
+// ...
+Now, add the test cases for the new route in the app.test.js file:
+
+javascript
+Copy code
+// app.test.js
+
+// ...
+
+test('DELETE /item/:itemName - success', async () => {
+  const itemToDelete = 'Apple';
+  const response = await request(app).delete(`/item/${itemToDelete}`);
+
+  expect(response.status).toBe(200);
+
+  // Make another request to the home page to check if the item has been removed
+  const homePageResponse = await request(app).get('/');
+  expect(homePageResponse.statusCode).toBe(200);
+  expect(homePageResponse.text).not.toContain(itemToDelete);
+});
+
+test('DELETE /item/:itemName - failure (item not found)', async () => {
+  const nonExistentItem = 'NonExistentItem';
+  const response = await request(app).delete(`/item/${nonExistentItem}`);
+
+  expect(response.status).toBe(404);
+});
+
+// ...
+These test cases check for a successful deletion of an existing item and the failure case when trying to delete a non-existent item. Run the test suite with npm test to verify that the new test cases pass.
+
+linuxha@linuxha.com
+Add the delete to the main web page
+To add the delete functionality to the main web page, you can create a "Delete" button next to each item on the home page. When the button is clicked, it will send an AJAX request to delete the item from the server.
+
+Update the views/index.ejs file to include a "Delete" button for each item:
+
+html
+Copy code
+<!-- views/index.ejs -->
+
+<!-- ... -->
+
+<tbody>
+  <% inventory.forEach((item) => { %>
+    <tr>
+      <td><%= item.item %></td>
+      <td><%= item.aisle %></td>
+      <td>
+        <button class="delete-item-btn" data-item="<%= item.item %>">Delete</button>
+      </td>
+    </tr>
+  <% }); %>
+</tbody>
+
+<!-- ... -->
+
+<script>
+  document.querySelectorAll('.delete-item-btn').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      const itemName = e.target.getAttribute('data-item');
+      try {
+        const response = await fetch(`/item/${encodeURIComponent(itemName)}`, {
+          method: 'DELETE',
+        });
+
+        if (response.status === 200) {
+          // Reload the page to show the updated list
+          window.location.reload();
+        } else {
+          alert(`Error deleting item: ${response.statusText}`);
+        }
+      } catch (error) {
+        alert(`Error deleting item: ${error.message}`);
+      }
+    });
+  });
+</script>
+
+In the above code, a "Delete" button is added to each item row in the table. The JavaScript code at the bottom of the file adds an event listener for each button to send a DELETE request to the server when the button is clicked. If the request is successful, the page will reload to show the updated inventory list.
+
+# ChatGPT4 switches to using Bootstrap and is very different from the first setup.
+# I've also modified the original and again need to modify this one also but in a
+# different way.
+
+can we improve the ui ?
+
+Sure, you can improve the UI by using a CSS framework like Bootstrap to style the elements. Here's an updated version of the views/index.ejs file using Bootstrap:
+
+html
+Copy code
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+Knujsl7/1L_dstPt3HV5HzF6Gvk/e3m5f/1Ro9ddfFOn1A" crossorigin="anonymous">
+</head>
+<body>
+  <div class="container">
+    <h1 class="my-3">Inventory</h1>
+
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th scope="col">Item</th>
+          <th scope="col">Aisle</th>
+          <th scope="col">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% inventory.forEach((item) => { %>
+          <tr>
+            <td><%= item.item %></td>
+            <td><%= item.aisle %></td>
+            <td>
+              <button class="btn btn-danger delete-item-btn" data-item="<%= item.item %>">Delete</button>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+
+    <a href="/generate-list" class="btn btn-primary mb-3">Generate List</a>
+
+    <form id="add-item-form" action="/add-item" method="post" class="row g-3">
+      <div class="col-md-4">
+        <label for="new-item" class="form-label">Item Name:</label>
+        <input type="text" name="new-item" id="new-item" class="form-control" required>
+      </div>
+
+      <div class="col-md-4">
+        <label for="aisle" class="form-label">Aisle:</label>
+        <input type="text" name="aisle" id="aisle" class="form-control" required>
+      </div>
+
+      <div class="col-md-4 d-flex align-items-end">
+        <button type="submit" class="btn btn-success">Add</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    document.querySelectorAll('.delete-item-btn').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        const itemName = e.target.getAttribute('data-item');
+        try {
+          const response = await fetch(`/item/${encodeURIComponent(itemName)}`, {
+            method: 'DELETE',
+          });
+
+          if (response.status === 200) {
+            // Reload the page to show the updated list
+            window.location.reload();
+          } else {
+            alert(`Error deleting item: ${response.statusText}`);
+          }
+        } catch (error) {
+          alert(`Error deleting item: ${error.message}`);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+This version of the file uses Bootstrap classes to style the table, buttons, and form. It also includes the Bootstrap CSS file from the CDN in the <head> section. The overall layout and appearance should be improved and more visually appealing.
+
+linuxha@linuxha.com
+you've removed the ability to select item for the list
+
+Apologies for that. I've added the ability to select items for the list back into the updated views/index.ejs file:
+
+html
+Copy code
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+Knujsl7/1L_dstPt3HV5HzF6Gvk/e3m5f/1Ro9ddfFOn1A" crossorigin="anonymous">
+</head>
+<body>
+  <div class="container">
+    <h1 class="my-3">Inventory</h1>
+
+    <form id="generate-list-form" action="/generate-list" method="post">
+      <table class="table table-striped table-hover">
+        <thead>
+          <tr>
+            <th scope="col">Select</th>
+            <th scope="col">Item</th>
+            <th scope="col">Aisle</th>
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% inventory.forEach((item) => { %>
+            <tr>
+              <td><input type="checkbox" name="items" value="<%= item.item %>"></td>
+              <td><%= item.item %></td>
+              <td><%= item.aisle %></td>
+              <td>
+                <button class="btn btn-danger delete-item-btn" data-item="<%= item.item %>">Delete</button>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+
+      <button type="submit" class="btn btn-primary mb-3">Generate List</button>
+    </form>
+
+    <form id="add-item-form" action="/add-item" method="post" class="row g-3">
+      <div class="col-md-4">
+        <label for="new-item" class="form-label">Item Name:</label>
+        <input type="text" name="new-item" id="new-item" class="form-control" required>
+      </div>
+
+      <div class="col-md-4">
+        <label for="aisle" class="form-label">Aisle:</label>
+        <input type="text" name="aisle" id="aisle" class="form-control" required>
+      </div>
+
+      <div class="col-md-4 d-flex align-items-end">
+        <button type="submit" class="btn btn-success">Add</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    document.querySelectorAll('.delete-item-btn').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        const itemName = e.target.getAttribute('data-item');
+        try {
+          const response = await fetch(`/item/${encodeURIComponent(itemName)}`, {
+            method: 'DELETE',
+          });
+
+          if (response.status === 200) {
+            // Reload the page to show the updated list
+            window.location.reload();
+          } else {
+            alert(`Error deleting item: ${response.statusText}`);
+          }
+        } catch (error) {
+          alert(`Error deleting item: ${error.message}`);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+Now, each item in the inventory has a checkbox next to it, which you can select to include
+
+linuxha@linuxha.com
+When I select just "Devil Dogs" I get and error from node.js:
+
+Could you please provide the specific error message you received from Node.js? This will help me identify and address the issue in the code.
+
+
+
+linuxha@linuxha.com
+TypeError: selectedItems.map is not a function
+    at /home/njc/dev/git/shopping/app.js:88:43
+    at Layer.handle [as handle_request] (/home/njc/dev/git/shopping/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/njc/dev/git/shopping/node_modules/express/lib/router/route.js:144:13)
+    at Route.dispatch (/home/njc/dev/git/shopping/node_modules/express/lib/router/route.js:114:3)
+    at Layer.handle [as handle_request] (/home/njc/dev/git/shopping/node_modules/express/lib/router/layer.js:95:5)
+    at /home/njc/dev/git/shopping/node_modules/express/lib/router/index.js:284:15
+    at Function.process_params (/home/njc/dev/git/shopping/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/njc/dev/git/shopping/node_modules/express/lib/router/index.js:280:10)
+    at /home/njc/dev/git/shopping/node_modules/express/node_modules/body-parser/lib/read.js:137:5
+    at AsyncResource.runInAsyncScope (async_hooks.js:198:9)
+This error occurs because the selectedItems value received by the /generate-list route is not an array. Since we are using checkboxes with the same name attribute, we expect the selected values to be sent as an array. However, when only one checkbox is selected, the value is sent as a string instead of an array.
+
+To fix this issue, we can update the /generate-list route handler in the app.js file to ensure selectedItems is always an array:
+
+javascript
+Copy code
+app.post('/generate-list', (req, res) => {
+  let selectedItems = req.body.items;
+  if (!Array.isArray(selectedItems)) {
+    selectedItems = [selectedItems];
+  }
+  const itemsWithAisles = selectedItems.map((item) => {
+    const inventoryItem = inventory.find((i) => i.item === item);
+    return { item, aisle: inventoryItem.aisle };
+  });
+  itemsWithAisles.sort((a, b) => parseInt(a.aisle) - parseInt(b.aisle));
+  const sortedItems = itemsWithAisles.map((item) => item.item);
+  res.render('list', { sortedItems });
+});
+Now, the route handler ensures that selectedItems is an array, even when only one checkbox is selected.
+
+# In addition to the changes to bootstrap it also missed the check box and the
+# saveListToFile(sortedItems). I think ChatGPT4 is now starting to hallucinate.
+# So I'll stop here.
+
+* -[ Fini ]------------------------------ ----------------------------------------
+** Emacs Org-mode stuff
+#+STARTUP: overview+
+#+STARTUP: inlineimages
+#+STARTUP: indent
+#+CREATOR: Neil Cherry <ncherry@linuxha.com>
+#+title: Node.js Shopping app
