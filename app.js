@@ -175,7 +175,7 @@ function saveListToFile(sortedItems) {
             console.log('List saved to file:', fileName);
 
             // Execute the external script with the new file as an argument
-            exec(`cav.sh ${fileName}> /tmp/cav.sh.log 2>&1`, (err, stdout, stderr) => {
+            exec(`./cav.sh ${fileName}> /tmp/cav.sh.log 2>&1`, (err, stdout, stderr) => {
                 if (err) {
                     console.error('Error executing cav.sh:', err);
                     return;
